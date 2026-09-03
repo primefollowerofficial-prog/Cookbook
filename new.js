@@ -153,8 +153,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ---------- 4. BACKGROUND COLOR CYCLE ----------
     // Pages bookpage0.png .. bookpage6.png (index 0-6) stay white.
-    // From bookpage7.png (index 7) onward, cycle: red -> yellow -> green -> blue -> repeat
+    // From bookpage7.png (index 7) onward, cycle: red -> yellow -> green -> blue -> repeat.
+    // Some pages are overridden to a one-off color (purple/brown/grey) below —
+    // those pages are SKIPPED when advancing the cycle, so the very next
+    // normal page picks up exactly where the cycle would have been if the
+    // override page had never existed (e.g. 24=yellow, 25=purple(override),
+    // 26=green — not blue).
     const COLOR_START_INDEX = 7;
+    const TOTAL_PAGE_COUNT = pages.length; // bookpage0 .. bookpage113 => 114 pages
     const bandColors = [
         'rgba(255, 210, 210, 0.55)', // very light red
         'rgba(255, 250, 205, 0.65)', // very light yellow
@@ -170,11 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
         'rgba(205, 230, 255, 0.9)'
     ];
 
-    // Specific pages get a one-off color instead of whatever the red/yellow/
-    // green/blue cycle would give them. This does NOT shift the cycle for
-    // any other page — the band math below is purely index-based, so the
-    // pattern just continues exactly where it left off on every page that
-    // isn't listed here.
     const PAGE_COLOR_OVERRIDES = {
         3: 'brown', 4: 'brown', 5: 'brown',
         6: 'purple', 25: 'purple', 44: 'purple', 61: 'purple',
@@ -187,24 +188,32 @@ document.addEventListener('DOMContentLoaded', () => {
         grey:   { body: 'rgba(220, 220, 220, 0.5)',  controls: 'rgba(220, 220, 220, 0.9)' }
     };
 
+    // Precompute the exact color for every page index once, so the r/y/g/b
+    // pointer only steps forward on pages that actually use the cycle.
+    const PAGE_BACKGROUND_MAP = {};
+    (function buildPageBackgroundMap() {
+        let cyclePointer = 0;
+        for (let idx = 0; idx < TOTAL_PAGE_COUNT; idx++) {
+            const override = PAGE_COLOR_OVERRIDES[idx];
+            if (override) {
+                PAGE_BACKGROUND_MAP[idx] = overrideColors[override];
+                continue; // does NOT advance the cycle
+            }
+            if (idx < COLOR_START_INDEX) {
+                PAGE_BACKGROUND_MAP[idx] = { body: '#ffffff', controls: 'rgba(255,255,255,0.85)' };
+                continue;
+            }
+            PAGE_BACKGROUND_MAP[idx] = { body: bandColors[cyclePointer], controls: controlBandColors[cyclePointer] };
+            cyclePointer = (cyclePointer + 1) % 4;
+        }
+    })();
+
     const controlsEl = document.getElementById('controls');
 
     function updateBackground(pageIndex) {
-        const body = document.body;
-        const override = PAGE_COLOR_OVERRIDES[pageIndex];
-        if (override) {
-            body.style.background = overrideColors[override].body;
-            controlsEl.style.background = overrideColors[override].controls;
-            return;
-        }
-        if (pageIndex < COLOR_START_INDEX) {
-            body.style.background = '#ffffff';
-            controlsEl.style.background = 'rgba(255,255,255,0.85)';
-        } else {
-            const band = (pageIndex - COLOR_START_INDEX) % 4;
-            body.style.background = bandColors[band];
-            controlsEl.style.background = controlBandColors[band];
-        }
+        const colors = PAGE_BACKGROUND_MAP[pageIndex] || { body: '#ffffff', controls: 'rgba(255,255,255,0.85)' };
+        document.body.style.background = colors.body;
+        controlsEl.style.background = colors.controls;
     }
 
     updateBackground(0);
