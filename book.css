@@ -1,0 +1,313 @@
+/* ===========================================================
+   book.css — all styling for the eBook viewer
+   =========================================================== */
+
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: #ffffff;
+    transition: background 0.6s ease;
+    font-family: sans-serif;
+    touch-action: none; /* let our custom pinch handler control gestures */
+}
+
+#stage {
+    position: relative;
+    width: 100%;
+    height: calc(100% - 90px); /* leave room for bottom bar */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+#zoomWrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center center;
+    transition: transform 0.05s linear;
+}
+
+#book {
+    box-shadow: 0 0 30px rgba(0,0,0,0.35);
+}
+
+.my-page {
+    background: #fff;
+    /* subtle paper-like inner edge so interior pages read as thin paper */
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.04);
+}
+.my-page img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    -webkit-user-select: none;
+    user-select: none;
+    cursor: zoom-in;
+}
+
+/* ---------- Front cover (bookpage0.png only) ---------- */
+.my-page.cover-page {
+    background: linear-gradient(150deg, #2b2b2b 0%, #1a1a1a 55%, #262626 100%);
+    border-radius: 6px;
+    position: relative;
+    /* layered inset shadows fake a thick board edge + slight sheen */
+    box-shadow:
+        inset 0 0 0 2px rgba(255,255,255,0.06),
+        inset 0 0 55px rgba(0,0,0,0.55),
+        inset 0 2px 0 rgba(255,255,255,0.08),
+        0 0 25px rgba(0,0,0,0.5);
+}
+.my-page.cover-page img {
+    border-radius: 6px;
+    filter: contrast(1.08) saturate(1.05);
+}
+/* faint printed-cardboard grain, purely decorative */
+.my-page.cover-page::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: 6px;
+    background: repeating-linear-gradient(115deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 4px);
+    mix-blend-mode: overlay;
+}
+
+/* ---------- Bottom control bar ---------- */
+#controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 90px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.85);
+    backdrop-filter: blur(6px);
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+    border-top: 2px solid rgba(210,210,210,0.6);
+    transition: background 0.6s ease;
+}
+
+.btn-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: bold;
+    color: white;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+button:active {
+    transform: translateY(2px) scale(0.97);
+}
+
+#prevBtn {
+    background: linear-gradient(180deg, #ff8a80 0%, #e53935 55%, #b71c1c 100%);
+    box-shadow: 0 4px 0 #7f0000, 0 6px 10px rgba(0,0,0,0.35);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+#prevBtn:active {
+    box-shadow: 0 2px 0 #7f0000, 0 3px 6px rgba(0,0,0,0.35);
+}
+
+#nextBtn {
+    background: linear-gradient(180deg, #a5f5b3 0%, #43a047 55%, #1b5e20 100%);
+    box-shadow: 0 4px 0 #0b3d0e, 0 6px 10px rgba(0,0,0,0.35);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+}
+#nextBtn:active {
+    box-shadow: 0 2px 0 #0b3d0e, 0 3px 6px rgba(0,0,0,0.35);
+}
+
+#downloadBtn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(180deg, #64b5f6 0%, #2196f3 55%, #1565c0 100%);
+    box-shadow: 0 3px 0 #0d47a1, 0 5px 10px rgba(21,101,192,0.35);
+    text-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    padding: 6px 14px;
+    font-size: 12px;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+/* diagonal light sweep across the button on hover */
+#downloadBtn::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(115deg, transparent, rgba(255,255,255,0.65), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.55s ease;
+    z-index: 1;
+}
+#downloadBtn:hover::before {
+    left: 130%;
+}
+#downloadBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 0 #0d47a1, 0 10px 18px rgba(21,101,192,0.45), 0 0 14px rgba(100,181,246,0.55);
+}
+#downloadBtn:active {
+    background: linear-gradient(180deg, #64b5f6 0%, #1976d2 55%, #0d47a1 100%);
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 2px 0 #0d47a1, 0 3px 6px rgba(21,101,192,0.35);
+}
+#downloadBtn .dl-icon {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+#downloadBtn:hover .dl-icon {
+    animation: dl-bounce 0.7s ease infinite;
+}
+@keyframes dl-bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(3px); }
+}
+
+#pageNum {
+    color: #333;
+    font-size: 13px;
+    font-weight: 600;
+    opacity: 0.75;
+}
+
+/* ---------- Fullscreen image viewer ---------- */
+#imgViewer {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    touch-action: none;
+}
+#imgViewer.open {
+    display: flex;
+}
+#imgViewer img {
+    max-width: 100%;
+    max-height: 100%;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    will-change: transform;
+}
+#viewerClose {
+    position: fixed;
+    top: 14px;
+    right: 16px;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 20px;
+    line-height: 42px;
+    text-align: center;
+    padding: 0;
+    z-index: 1001;
+}
+#viewerPrev,
+#viewerNext {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    border-radius: 50%;
+    width: 46px;
+    height: 46px;
+    font-size: 20px;
+    padding: 0;
+    z-index: 1001;
+}
+#viewerPrev { left: 16px; }
+#viewerNext { right: 16px; }
+
+/* ===========================================================
+   Desktop / tablet only — everything below is scoped to
+   min-width: 769px so the phone UI stays exactly as-is.
+   =========================================================== */
+@media (min-width: 769px) {
+
+    #stage {
+        height: calc(100% - 100px); /* matches the slightly taller controls bar below */
+        padding: 30px 60px;
+        box-sizing: border-box;
+        /* soft radial "table" surface instead of a flat blank void */
+        background: radial-gradient(ellipse at center, rgba(0,0,0,0.07) 0%, rgba(0,0,0,0) 65%);
+    }
+
+    #zoomWrapper {
+        max-width: 1200px; /* 2-page spread (max ~1500px worth of page width) always ends up smaller than this and the viewport */
+        margin: 0 auto;
+    }
+
+    #book {
+        box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    }
+
+    #controls {
+        height: 100px;
+        gap: 8px;
+        max-width: 1200px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -4px 18px rgba(0,0,0,0.12);
+    }
+
+    .btn-row {
+        gap: 22px;
+    }
+
+    button {
+        font-size: 16px;
+        padding: 12px 26px;
+        border-radius: 12px;
+    }
+
+    #downloadBtn {
+        font-size: 14px;
+        padding: 8px 18px;
+    }
+
+    #pageNum {
+        font-size: 14px;
+    }
+
+    #viewerPrev,
+    #viewerNext {
+        width: 54px;
+        height: 54px;
+        font-size: 24px;
+    }
+}
