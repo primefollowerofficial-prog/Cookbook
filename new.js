@@ -169,10 +169,34 @@ document.addEventListener('DOMContentLoaded', () => {
         'rgba(210, 255, 215, 0.9)',
         'rgba(205, 230, 255, 0.9)'
     ];
+
+    // Specific pages get a one-off color instead of whatever the red/yellow/
+    // green/blue cycle would give them. This does NOT shift the cycle for
+    // any other page — the band math below is purely index-based, so the
+    // pattern just continues exactly where it left off on every page that
+    // isn't listed here.
+    const PAGE_COLOR_OVERRIDES = {
+        3: 'brown', 4: 'brown', 5: 'brown',
+        6: 'purple', 25: 'purple', 44: 'purple', 61: 'purple',
+        74: 'purple', 90: 'purple', 111: 'purple', 112: 'purple',
+        113: 'grey'
+    };
+    const overrideColors = {
+        purple: { body: 'rgba(230, 210, 255, 0.55)', controls: 'rgba(230, 210, 255, 0.9)' },
+        brown:  { body: 'rgba(224, 197, 165, 0.5)',  controls: 'rgba(224, 197, 165, 0.9)' },
+        grey:   { body: 'rgba(220, 220, 220, 0.5)',  controls: 'rgba(220, 220, 220, 0.9)' }
+    };
+
     const controlsEl = document.getElementById('controls');
 
     function updateBackground(pageIndex) {
         const body = document.body;
+        const override = PAGE_COLOR_OVERRIDES[pageIndex];
+        if (override) {
+            body.style.background = overrideColors[override].body;
+            controlsEl.style.background = overrideColors[override].controls;
+            return;
+        }
         if (pageIndex < COLOR_START_INDEX) {
             body.style.background = '#ffffff';
             controlsEl.style.background = 'rgba(255,255,255,0.85)';
